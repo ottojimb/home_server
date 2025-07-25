@@ -1,0 +1,174 @@
+- name: Home
+  # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
+  # hide-desktop-navigation: true
+  columns:
+    - size: small
+      widgets:
+        - type: search
+          autofocus: true
+
+        - type: monitor
+          cache: 60m
+          title: Services
+          sites:
+            - title: Chatwoot
+              url: https://woot.localdomain.host/
+              icon: si:chatwoot
+            - title: N8N
+              url: https://n8n.localdomain.host/
+              icon: si:n8n
+            - title: Whatsapp Evolution
+              url: https://evo.localdomain.host/manager
+              icon: si:whatsapp
+
+        - type: bookmarks
+          groups:
+            - title: General
+              links:
+                - title: Gmail
+                  url: https://mail.google.com/mail/u/0/
+                - title: Amazon
+                  url: https://www.amazon.com/
+                - title: Github
+                  url: https://github.com/
+            - title: Entertainment
+              links:
+                - title: YouTube
+                  url: https://www.youtube.com/
+            - title: Social
+              links:
+                - title: Reddit
+                  url: https://www.reddit.com/
+                - title: Twitter
+                  url: https://twitter.com/
+                - title: Instagram
+                  url: https://www.instagram.com/
+
+    - size: full
+      widgets:
+        - type: group
+          widgets:
+            - type: hacker-news
+            - type: lobsters
+
+        - type: videos
+          channels:
+            # This is the channel ID fro YouTube channels, you can find it in the URL of the channel page.
+            - UC9IKtxn9AIGelnYmwYr0Lxw # Codely
+            - UC5rJaxmE3UyVz59OGxbPdAg # Noticias Robotitus
+            - UCBZqfPIXgIUMfj7A93JSoJw # Leedeo Studios
+            - UC8LeXCWOalN8SxlrPcG-PaQ # MiduDev
+            - UCQ1GpKa15ulyoQuxz7H4rng # DW Documental
+
+        - type: group
+          widgets:
+            - type: reddit
+              subreddit: productivity
+              show-thumbnails: true
+            - type: reddit
+              subreddit: selfhosted
+              show-thumbnails: true
+            - type: reddit
+              subreddit: godot
+              show-thumbnails: true
+
+    - size: small
+      widgets:
+        - type: weather
+          title: Bogotá
+          location: Bogota, Colombia
+          units: metric # alternatively "imperial"
+          hour-format: 12h # alternatively "24h"
+          # hide-location: true
+        - type: weather
+          title: Ibagué
+          location: Ibagué, Colombia
+          units: metric
+          hour-format: 12h # alternatively "24h"
+
+
+        # - type: markets
+        #   markets:
+        #     - symbol: SPY
+        #       name: S&P 500
+        #     - symbol: BTC-USD
+        #       name: Bitcoin
+        #     - symbol: NVDA
+        #       name: NVIDIA
+        #     - symbol: AAPL
+        #       name: Apple
+        #     - symbol: MSFT
+        #       name: Microsoft
+
+        # - type: releases
+        #   cache: 1d
+        #   # token: ...
+        #   repositories:
+        #     - glanceapp/glance
+        #     - go-gitea/gitea
+        #     - immich-app/immich
+        #     - syncthing/syncthing
+
+- name: Entertainment
+  # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
+  # hide-desktop-navigation: true
+  columns:
+    - size: full
+      widgets:
+        - type: group
+          widgets:
+            - type: custom-api
+              title: "Trending"
+              cache: 6h
+              url: https://api.themoviedb.org/3/trending/all/week?language=en-US
+              headers:
+                Authorization: Bearer eyDONTUSEMYTOKEN
+                accept: application/json
+              - $include: movies.yml
+            - type: custom-api
+              title: "Movies"
+              cache: 6h
+              url: https://api.themoviedb.org/3/trending/movie/week?language=en-US
+              headers:
+                Authorization: Bearer eyDONTUSEMYTOKEN
+                accept: application/json
+              - $include: movies.yml
+            - type: custom-api
+              title: "TV Shows"
+              cache: 6h
+              url: https://api.themoviedb.org/3/trending/tv/week?language=en-US
+              - $include: movies.yml
+        - type: videos
+          channels:
+            - UCh9bPqBTqKPp-uz0rSV_g6A # Sesión Geek
+            - UCN_CWpl70T3DgnfS9HjMfKQ # VSX Project
+            - UClNSdNAqetoA97IG9zvscow # La Caverna del Gamer
+            - UC66soxYX4IBUF4V94EdyYBQ # Zep Films
+            - UCvmF_tzu-eK6FRfMlOp6-Fg # Eurogamer
+            - UCKg62SeDyhapECOeQLRnakA # El Cofre de los Videojuegos
+            - UCNXmVe2tY_qbmv0y6TsAKlw # Coffe TV
+            - UCWcp1Mwm7_bJ-mVoZb8TdkQ # TuberViejuner
+            - UCzRKnN3Si8tawp35-Ilvqng # El Gamer Friki
+            - UCy6pDeDwRFi1kmFekSpMDUA # La Poción Roja
+
+        - type: group
+          widgets:
+            - type: reddit
+              subreddit: technology
+              show-thumbnails: true
+            - type: reddit
+              subreddit: selfhosted
+              show-thumbnails: true
+
+    - size: small
+      widgets:
+        - type: weather
+          title: Bogotá
+          location: Bogotá, Colombia
+          units: metric
+          hour-format: 12h # alternatively "24h"
+        - type: weather
+          title: Ibagué
+          location: Ibagué, Colombia
+          units: metric
+          hour-format: 12h # alternatively "24h"

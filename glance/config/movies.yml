@@ -1,0 +1,36 @@
+headers:
+Authorization: Bearer eyDONTUSEMYTOKEN
+accept: application/json
+template: |
+    <ul class="list list-gap-10 collapsible-container" data-collapse-after="5">
+    {{ range .JSON.Array "results" }}
+        {{ $media_type := .String "media_type" }}
+        {{ $vote_average:= .Float "vote_average" }}
+        <li class="flex items-start gap-10 thumbnail-container thumbnail-parent">
+        <a href="https://www.themoviedb.org/{{ if eq $media_type "tv" }}tv{{ else }}movie{{ end }}/{{ .Int "id" }}" target="_blank">
+            <img src="https://image.tmdb.org/t/p/w500{{ .String "poster_path" }}" width="100" alt="{{ .String "title" }}" class="thumbnail">
+        </a>
+        <div class="flex-1" style="padding-right: 5px;">
+            {{ if eq $media_type "tv" }}
+
+            <p class="color-positive size-h4 text-truncate-2-lines margin-top-5"> {{ .String "name" }} </p>
+            <p> ({{ slice (.String "first_air_date") 0 4 }}) </p>
+
+            {{ else }}
+
+            <p class="color-positive size-h4 text-truncate-2-lines margin-top-5"> {{ .String "title" }} </p>
+            <p class="margin-bottom-5">({{ slice (.String "release_date") 0 4 }})</p>
+
+            {{ end }}
+            <p class="margin-top-5">
+
+            <span class="color-positive">Rating: {{ $vote_average }}</span>
+            {{ if .String "overview" }}
+                <br>
+                <span class="text-truncate-2-lines">{{ .String "overview" }}</span>
+            {{ end }}
+            </p>
+        </div>
+        </li>
+    {{ end }}
+    </ul>

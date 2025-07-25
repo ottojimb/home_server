@@ -1,0 +1,234 @@
+services:
+  base: &base
+    image: chatwoot/chatwoot:v4.4.0-ce
+    env_file: .env
+    volumes:
+      - storage_data:/app/storage
+
+  chatwoot:
+    <<: *base
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - '3099:3000'
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - FRONTEND_URL=https://woot.localdomain.host
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
+    restart: always
+    networks:
+        - ia_network
+
+  sidekiq:
+    <<: *base
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
+    restart: always
+    networks:
+        - ia_network
+
+  n8n:
+    image: n8nio/n8n:1.104.0
+    restart: unless-stopped
+    container_name: n8n
+    environment:
+      - DB_TYPE=sqlite
+      - DB_SQLITE_DATABASE=/data/database.sqlite
+      - N8N_PROTOCOL=https
+      - N8N_PORT=5678
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_EDITOR_BASE_URL=https://n8n.localdomain.host
+      - N8N_PUBLIC_API=true
+      - N8N_PUSH_BACKEND=websocket
+      - N8N_HOST=n8n.localdomain.host
+      - WEBHOOK_URL=https://n8n.localdomain.host/
+      - N8N_ENCRYPTION_KEY=this_is_a_secret_key_for_n8n
+    env_file:
+      - .env
+    volumes:
+        - n8n_data:/data
+    ports:
+      - "5678:5678"
+    networks:
+      - ia_network
+
+  nginxproxy:
+    image: 'jc21/nginx-proxy-manager:2.12.6'
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./nginxproxy_data:/data
+      - ./nginxproxy_letsencrypt:/etc/letsencrypt
+    networks:
+      - ia_network
+
+  redis:
+    image: redis:8.0.3
+    restart: unless-stopped
+    container_name: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    networks:
+      - ia_network
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=evolution-api
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ia_network
+
+  evolution-api:
+    image: atendai/evolution-api:v2.2.3
+    restart: unless-stopped
+    container_name: evolution-api
+    environment:
+        - AUTHENTICATION_API_KEY=Granat3!
+        - DATABASE_ENABLED=true
+        - DATABASE_PROVIDER=postgresql
+        - DATABASE_CONNECTION_URI=postgres://postgres:postgres@postgres:5432/evolution-api
+        - DATABASE_SAVE_DATA_INSTANCE=true
+        - DATABASE_SAVE_DATA_NEW_MESSAGE=false
+        - DATABASE_SAVE_MESSAGE_UPDATE=false
+        - DATABASE_SAVE_DATA_CONTACTS=false
+        - DATABASE_SAVE_DATA_CHATS=false
+        - DATABASE_CONNECTION_CLIENT_NAME=evolution_v2
+        - CONFIG_SESSION_PHONE_VERSION=2.3000.1023204200
+        - CACHE_REDIS_ENABLED=true
+        - CACHE_REDIS_URI=redis://redis:6379
+        - CACHE_REDIS_PREFIX_KEY=evolution
+        - RABBITMQ_ENABLED=false
+        - SQS_ENABLED=false
+        - CHATWOOT_ENABLED=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8099:8080"
+    volumes:
+      - evolution_store:/evolution/store
+      - evolution_instances:/evolution/instances
+    networks:
+      - ia_network
+
+  nocodb:
+    image: nocodb/nocodb:0.263.8
+    restart: unless-stopped
+    environment:
+    - NC_DB_TYPE=postgres
+    - NC_DB_HOST=postgres
+    - NC_DB_PORT=5432
+    - NC_DB_USER=postgres
+    - NC_DB_PASSWORD=postgres
+    - NC_DB_NAME=nocodb
+    - NC_SERVER_PORT=8080
+    - NC_AUTH_JWT_SECRET=this_is_a_secret_key_for_nocodb
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+    - "8100:8080"
+    volumes:
+    - nocodb_data:/usr/app/data
+    networks:
+    - ia_network
+
+volumes:
+    open_webui_data:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./n8n_data
+            o: bind
+    n8n_data:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./n8n_data
+            o: bind
+    nginxproxy_data:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./nginxproxy_data
+            o: bind
+    nginxproxy_letsencrypt:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./nginxproxy_letsencrypt
+            o: bind
+    ollama_data:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./ollama_data
+            o: bind
+    evolution_store:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./evolution_store
+            o: bind
+    evolution_instances:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./evolution_instances
+            o: bind
+    postgres_data:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./postgres_data
+            o: bind
+    storage_data:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./storage_data
+            o: bind
+    nocodb_data:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./nocodb_data
+            o: bind
+
+networks:
+    ia_network:
+        external: true
