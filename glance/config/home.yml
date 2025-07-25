@@ -121,17 +121,11 @@
               title: "Trending"
               cache: 6h
               url: https://api.themoviedb.org/3/trending/all/week?language=en-US
-              headers:
-                Authorization: Bearer eyDONTUSEMYTOKEN
-                accept: application/json
               - $include: movies.yml
             - type: custom-api
               title: "Movies"
               cache: 6h
               url: https://api.themoviedb.org/3/trending/movie/week?language=en-US
-              headers:
-                Authorization: Bearer eyDONTUSEMYTOKEN
-                accept: application/json
               - $include: movies.yml
             - type: custom-api
               title: "TV Shows"
